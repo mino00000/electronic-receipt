@@ -33,8 +33,8 @@ def send_email(receiver_email, subject, amount):
         # SMTP 서버 설정
         smtp_server = 'smtp.gmail.com'
         smtp_port = 587
-        sender_email = 'jmh001113@gmail.com'  # 발신자 Gmail 이메일 주소
-        sender_password = 'nqvz qyph qzkg xrnr'  # Gmail 앱 비밀번호 (16자리)
+        sender_email = ''  # 발신자 Gmail 이메일 주소
+        sender_password = ''  # Gmail 앱 비밀번호 (16자리)
 
         # 현재 결제 일자 가져오기
         payment_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
