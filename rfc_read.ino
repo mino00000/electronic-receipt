@@ -30,31 +30,43 @@ void loop() {
     return;
   }
 
-  // 인증
-  byte block = 4; // 읽고자 하는 블록 번호 (섹터 1, 블록 4)
+  // 3개의 블록(4, 5, 6)에서 이메일을 읽어올 배열
+  char email[48] = {0}; // 최대 48바이트
+  byte buffer[18];      // 데이터 읽기 버퍼
+  byte size = sizeof(buffer);
   MFRC522::StatusCode status;
 
-  status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print("인증 실패: ");
-    Serial.println(mfrc522.GetStatusCodeName(status));
-    return;
+  // 블록 4, 5, 6 읽기
+  for (byte i = 0; i < 3; i++) {
+    byte block = 4 + i;  // 블록 4, 5, 6 사용
+
+    // 인증
+    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
+    if (status != MFRC522::STATUS_OK) {
+      Serial.print("인증 실패 (블록 ");
+      Serial.print(block);
+      Serial.print("): ");
+      Serial.println(mfrc522.GetStatusCodeName(status));
+      return;
+    }
+
+    // 데이터 읽기
+    status = mfrc522.MIFARE_Read(block, buffer, &size);
+    if (status != MFRC522::STATUS_OK) {
+      Serial.print("읽기 실패 (블록 ");
+      Serial.print(block);
+      Serial.print("): ");
+      Serial.println(mfrc522.GetStatusCodeName(status));
+      return;
+    } else {
+      // 읽어온 데이터를 이메일 배열에 복사
+      strncat(email, (char*)buffer, 16);
+    }
   }
 
-  // 데이터 읽기
-  byte buffer[18];
-  byte size = sizeof(buffer);
-  status = mfrc522.MIFARE_Read(block, buffer, &size);
-  if (status != MFRC522::STATUS_OK) {
-    Serial.print("읽기 실패: ");
-    Serial.println(mfrc522.GetStatusCodeName(status));
-  } else {
-    Serial.print("읽은 데이터: ");
-    for (byte i = 0; i < 16; i++) {
-      Serial.write(buffer[i]);  // 데이터를 시리얼로 전송
-    }
-    Serial.println();
-  }
+  // 읽은 이메일 출력
+  Serial.print("읽은 이메일: ");
+  Serial.println(email);
 
   mfrc522.PICC_HaltA();      // 카드 중지
   mfrc522.PCD_StopCrypto1(); // 암호화 중지
