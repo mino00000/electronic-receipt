@@ -57,6 +57,7 @@ POS 시스템과 RC522 모듈 간의 시리얼 통신을 설정할 때 **COM 포
 
 ```python
 ser = serial.Serial('COM12', 9600)  # 아두이노와의 시리얼 통신 설정
+```
 ## 5. 구글 SMTP 설정 (Gmail 앱 비밀번호 사용)
 이 프로젝트는 **Gmail SMTP 서버**를 통해 이메일을 전송합니다. 이를 위해 **Google의 앱 비밀번호**를 사용해야 합니다.
 
@@ -72,6 +73,7 @@ smtp_server = 'smtp.gmail.com'
 smtp_port = 587
 sender_email = 'your_email@gmail.com'  # 발신자 이메일
 sender_password = 'your_app_password'  # Google 앱 비밀번호
+```
 
 ---
 
