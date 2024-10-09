@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
 import logging
+import time  # 중복 태그 방지를 위한 시간 모듈
 
 # 로그 설정 (CMD에 로그 출력)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -24,8 +25,9 @@ amount_label.pack(pady=10)
 amount_entry = tk.Entry(root)
 amount_entry.pack(pady=5)
 
-# 오류 상태를 추적하는 플래그
+# 오류 상태 및 중복 태그 방지 상태를 추적하는 플래그
 error_shown = False
+tag_blocked = False  # 중복 태그를 방지하는 플래그
 
 # 이메일 전송 함수 (영수증 형식으로 작성)
 def send_email(receiver_email, subject, amount):
@@ -93,8 +95,8 @@ def send_email(receiver_email, subject, amount):
 
 # NFC 데이터 읽기 함수 (태그 감지 후 자동 처리)
 def check_nfc_tag():
-    global error_shown
-    if ser.in_waiting > 0:  # 시리얼 포트에 데이터가 들어오면
+    global error_shown, tag_blocked
+    if ser.in_waiting > 0 and not tag_blocked:  # 시리얼 포트에 데이터가 들어오면
         email = ser.readline().decode('utf-8').strip()
         if email and "@" in email:  # 이메일이 공백이 아니고 '@'를 포함할 때 정상 처리
             logging.info(f"NFC 데이터 감지: {email}")
@@ -104,12 +106,22 @@ def check_nfc_tag():
             
             # 이메일 전송 (영수증 형식)
             send_email(email, '영수증', amount_entry.get())
+
+            # 태그 감지 후 2초간 중복 태그 방지
+            tag_blocked = True
+            root.after(2000, unblock_tag)  # 2초 후 태그 다시 허용
         else:
             if not error_shown:  # 이미 오류 메시지가 표시된 상태가 아니라면
                 logging.warning("NFC 태그에서 올바른 이메일을 읽지 못했습니다.")
                 messagebox.showerror("오류", "NFC 태그에서 올바른 이메일을 읽지 못했습니다.")
                 error_shown = True  # 오류가 표시되었음을 기록
     root.after(100, check_nfc_tag)  # 100ms 후 다시 호출하여 반복 실행
+
+# 태그 잠금 해제 함수 (2초 후 호출)
+def unblock_tag():
+    global tag_blocked
+    tag_blocked = False
+    logging.info("NFC 태그 재허용")
 
 # 영수증 선택 함수
 def select_receipt_method():
